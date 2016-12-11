@@ -92,7 +92,8 @@ class NeuralNetwork(object):
             self.testAccuracies.append(self.cost(testdataI, testdataO) / (testsize-1))
 
     def cost(self, inData, outData):
-        return 0.5 * np.sum(np.square(outData - self.propagation(inData)))
+        'cost function used in this NN'
+        return 0.5 * np.sum(np.square(outData - self.propagation(inData))) + self.lam * 0.5 * (np.sum(np.square(self.W2[:, 1:])) + np.sum(np.square(self.W3[:, 1:])))
 
     def save(self, filename):
         'save network'
@@ -151,11 +152,20 @@ class NeuralNetwork(object):
         gradEx3 = x3 - outputdatum
         gradW3 = (gradEx3 * activation_difffunc(u3, "id")).dot(x2.transpose())
 
+        # regularization
+        regW3 = np.hstack((np.zeros((gradW3.shape[0], 1)), self.W3[:, 1:]))
+        gradW3 += self.lam * regW3
+
         # gradEx2 = (gradEx3 * activation_difffunc(u3, "id")).transpose().dot(self.W3)
         # gradEx2 = gradEx2.reshape(gradEx2.size, 1)
         gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3, "id"))
         # bias項のぶんだけ除く
         gradW2 = (gradEx2[1:] * activation_difffunc(u2)).dot(x1.transpose())
+
+        #regularization
+        regW2 = np.hstack((np.zeros((gradW2.shape[0], 1)), self.W2[:, 1:]))
+        gradW2 += self.lam * regW2
+
 
         return (gradW2, gradW3)
 
