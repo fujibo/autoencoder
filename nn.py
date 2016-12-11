@@ -121,6 +121,7 @@ class NeuralNetwork(object):
         if len(inputdata.shape) == 1:
             inputdata = inputdata.reshape(inputdata.size, 1)
         inputdata = np.concatenate((np.ones((1, inputdata.shape[1])), inputdata), axis=0)
+
         u2 = self.W2.dot(inputdata)
         # u2_1 = W2[0].dot(inputdata)
         # u2_2 = W2[1].dot(inputdata)
@@ -145,11 +146,14 @@ class NeuralNetwork(object):
         x3 = x3.reshape(x3.size, 1)
         u2 = u2.reshape(u2.size, 1)
         u3 = u3.reshape(u3.size, 1)
-
+        outputdatum = outputdatum.reshape(outputdatum.size, 1)
         gradEx3 = x3 - outputdatum
+        # print(gradEx3.shape)
+        # print(u3.shape)
+        # print(x2.shape)
         gradW3 = (gradEx3 * activation_difffunc(u3, "id")).dot(x2.transpose())
 
-        gradEx2 = (gradEx3 * activation_difffunc(u3, "id")).dot(self.W3)
+        gradEx2 = (gradEx3 * activation_difffunc(u3, "id")).transpose().dot(self.W3)
         gradEx2 = gradEx2.reshape(gradEx2.size, 1)
         gradW2 = (gradEx2 * activation_difffunc(u2)).dot(x1.transpose())
 
