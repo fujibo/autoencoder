@@ -34,8 +34,6 @@ class NeuralNetwork(object):
         else:
             f = open(filename, 'r')
 
-
-
     def initW(self):
         'initialize weight'
         self.W2 = np.random.rand(self.HIDDEN_LAYER-1, self.INPUT_LAYER)
@@ -48,9 +46,10 @@ class NeuralNetwork(object):
         self.W2 -= self.mu * gradW2
         self.W3 -= self.mu * gradW3
 
-    def setparams(self, mu=1e-4, MaxTrial=50, MaxEpoch=100, TestRatio=10):
+    def setparams(self, mu=1e-4, lam=1e-6, MaxTrial=50, MaxEpoch=100, TestRatio=10):
         'set parameters'
         self.mu = mu
+        self.lam = lam
         self.MaxTrial = MaxTrial
         self.MaxEpoch = MaxEpoch
         # percentage
@@ -88,9 +87,12 @@ class NeuralNetwork(object):
                 # self.checkgrad(tdataI, tdataO)
                 self.updateW(tdataI, tdataO)
 
-            self.trainAccuracies.append(np.sum(np.square(traindataO[:, :, 0].transpose() - self.propagation(traindataI[:, :, 0].transpose()))) / (trainsize-1))
+            # varidation / 2
+            self.trainAccuracies.append(self.cost(traindataI[:, :, 0].transpose(), traindataO[:, :, 0].transpose()) / (trainsize-1))
+            self.testAccuracies.append(self.cost(testdataI, testdataO) / (testsize-1))
 
-            self.testAccuracies.append(np.sum(np.square(testdataO - self.propagation(testdataI)))/ (testsize-1))
+    def cost(self, inData, outData):
+        return 0.5 * np.sum(np.square(outData - self.propagation(inData)))
 
     def save(self, filename):
         'save network'
@@ -170,20 +172,20 @@ class NeuralNetwork(object):
         for i in range(self.W2.shape[0]):
             for j in range(self.W2.shape[1]):
                 self.W2[i][j] += delta
-                upper = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
+                upper = self.cost(inputdatum, outputdatum)
                 self.W2 = originW2.copy()
                 self.W2[i][j] -= delta
-                lower = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
+                lower = self.cost(inputdatum, outputdatum)
                 ngradW2[i][j] = (upper - lower) / (2 * delta)
                 self.W2 = originW2.copy()
 
         for i in range(self.W3.shape[0]):
             for j in range(self.W3.shape[1]):
                 self.W3[i][j] += delta
-                upper = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
+                upper = self.cost(inputdatum, outputdatum)
                 self.W3 = originW3.copy()
                 self.W3[i][j] -= delta
-                lower = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
+                lower = self.cost(inputdatum, outputdatum)
                 ngradW3[i][j] = (upper - lower) / (2 * delta)
                 self.W3 = originW3.copy()
 
