@@ -72,6 +72,9 @@ class NeuralNetwork(object):
         traindataI = inputdata[testsize:]
         traindataO = outputdata[testsize:]
 
+        traindataI = traindataI.reshape(traindataI.shape[0], traindataI.shape[1], 1)
+        traindataO = traindataO.reshape(traindataO.shape[0], traindataO.shape[1], 1)
+
         testdataI = testdataI.transpose()
         testdataO = testdataO.transpose()
 
@@ -80,10 +83,12 @@ class NeuralNetwork(object):
         for i in range(self.MaxEpoch):
             for j in range(self.MaxTrial):
                 pickupiter = np.random.randint(trainsize)
-                # self.checkgrad(traindataI[pickupiter], traindataO[pickupiter])
-                self.updateW(traindataI[pickupiter], traindataO[pickupiter])
+                tdataI = traindataI[pickupiter]
+                tdataO = traindataO[pickupiter]
+                # self.checkgrad(tdataI, tdataO)
+                self.updateW(tdataI, tdataO)
 
-            self.trainAccuracies.append(np.sum(np.square(traindataO.transpose() - self.propagation(traindataI.transpose()))) / (trainsize-1))
+            self.trainAccuracies.append(np.sum(np.square(traindataO[:, :, 0].transpose() - self.propagation(traindataI[:, :, 0].transpose()))) / (trainsize-1))
 
             self.testAccuracies.append(np.sum(np.square(testdataO - self.propagation(testdataI)))/ (testsize-1))
 
@@ -118,13 +123,10 @@ class NeuralNetwork(object):
 
     def propagation(self, inputdata, type=None):
         'propagation in network'
-        if len(inputdata.shape) == 1:
-            inputdata = inputdata.reshape(inputdata.size, 1)
         inputdata = np.concatenate((np.ones((1, inputdata.shape[1])), inputdata), axis=0)
 
         u2 = self.W2.dot(inputdata)
-        # u2_1 = W2[0].dot(inputdata)
-        # u2_2 = W2[1].dot(inputdata)
+
         x2 = activation_func(u2)
         u3 = self.W3.dot(x2)
         x3 = activation_func(u3, "id")
@@ -141,20 +143,13 @@ class NeuralNetwork(object):
 
         x1, x2, x3 = xs
         u2, u3 = us
-        x1 = x1.reshape(x1.size, 1)
-        x2 = x2.reshape(x2.size, 1)
-        x3 = x3.reshape(x3.size, 1)
-        u2 = u2.reshape(u2.size, 1)
-        u3 = u3.reshape(u3.size, 1)
-        outputdatum = outputdatum.reshape(outputdatum.size, 1)
+
         gradEx3 = x3 - outputdatum
-        # print(gradEx3.shape)
-        # print(u3.shape)
-        # print(x2.shape)
         gradW3 = (gradEx3 * activation_difffunc(u3, "id")).dot(x2.transpose())
 
-        gradEx2 = (gradEx3 * activation_difffunc(u3, "id")).transpose().dot(self.W3)
-        gradEx2 = gradEx2.reshape(gradEx2.size, 1)
+        # gradEx2 = (gradEx3 * activation_difffunc(u3, "id")).transpose().dot(self.W3)
+        # gradEx2 = gradEx2.reshape(gradEx2.size, 1)
+        gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3, "id"))
         gradW2 = (gradEx2 * activation_difffunc(u2)).dot(x1.transpose())
 
         return (gradW2, gradW3)
@@ -172,20 +167,20 @@ class NeuralNetwork(object):
         for i in range(self.W2.shape[0]):
             for j in range(self.W2.shape[1]):
                 self.W2[i][j] += delta
-                upper = 0.5 * (outputdatum - self.propagation(inputdatum)) ** 2
+                upper = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
                 self.W2 = originW2.copy()
                 self.W2[i][j] -= delta
-                lower = 0.5 * (outputdatum - self.propagation(inputdatum)) ** 2
+                lower = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
                 ngradW2[i][j] = (upper - lower) / (2 * delta)
                 self.W2 = originW2.copy()
 
         for i in range(self.W3.shape[0]):
             for j in range(self.W3.shape[1]):
                 self.W3[i][j] += delta
-                upper = 0.5 * (outputdatum - self.propagation(inputdatum)) ** 2
+                upper = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
                 self.W3 = originW3.copy()
                 self.W3[i][j] -= delta
-                lower = 0.5 * (outputdatum - self.propagation(inputdatum)) ** 2
+                lower = 0.5 * np.sum(np.square(outputdatum - self.propagation(inputdatum)))
                 ngradW3[i][j] = (upper - lower) / (2 * delta)
                 self.W3 = originW3.copy()
 
