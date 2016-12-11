@@ -38,7 +38,7 @@ class NeuralNetwork(object):
 
     def initW(self):
         'initialize weight'
-        self.W2 = np.random.rand(self.HIDDEN_LAYER, self.INPUT_LAYER)
+        self.W2 = np.random.rand(self.HIDDEN_LAYER-1, self.INPUT_LAYER)
         self.W3 = np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER)
 
     def updateW(self, inputdatum, outputdatum):
@@ -128,6 +128,8 @@ class NeuralNetwork(object):
         u2 = self.W2.dot(inputdata)
 
         x2 = activation_func(u2)
+        x2 = np.concatenate((np.ones((1, x2.shape[1])), x2), axis=0)
+
         u3 = self.W3.dot(x2)
         x3 = activation_func(u3, "id")
         xs = (inputdata, x2, x3)
@@ -150,7 +152,8 @@ class NeuralNetwork(object):
         # gradEx2 = (gradEx3 * activation_difffunc(u3, "id")).transpose().dot(self.W3)
         # gradEx2 = gradEx2.reshape(gradEx2.size, 1)
         gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3, "id"))
-        gradW2 = (gradEx2 * activation_difffunc(u2)).dot(x1.transpose())
+        # bias項のぶんだけ除く
+        gradW2 = (gradEx2[1:] * activation_difffunc(u2)).dot(x1.transpose())
 
         return (gradW2, gradW3)
 
