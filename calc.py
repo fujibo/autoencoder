@@ -36,7 +36,7 @@ def makeData(operators):
     return(inputdata, outputdata)
 
 def loaddata():
-    matdata = spi.loadmat("./IMAGES.mat")
+    matdata = spi.loadmat("./DATA/IMAGES.mat")
     matdata = matdata['IMAGES']
     data = []
     for i in range(10000):
