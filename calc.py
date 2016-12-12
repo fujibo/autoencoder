@@ -1,5 +1,6 @@
 import nn
 import numpy as np
+import scipy.io as spi
 
 def makeData(operators):
     inputdata = []
@@ -34,9 +35,22 @@ def makeData(operators):
 
     return(inputdata, outputdata)
 
+def loaddata():
+    matdata = spi.loadmat("./IMAGES.mat")
+    matdata = matdata['IMAGES']
+    data = []
+    for i in range(10000):
+        img = np.random.randint(10)
+        point = np.random.randint(0, 512-8, 2)
+        data.append(matdata[point[0]:point[0]+8, point[1]:point[1]+8, img].flatten())
+    else:
+        print("make data")
+        return np.array(data).transpose()
+
 if __name__ == '__main__':
     NN = nn.NeuralNetwork(layer_num=(2, 10, 2))
 
+    print(loaddata().shape)
     operators = ('+', '-')
     inputdata, outputdata = makeData(operators=operators)
 
