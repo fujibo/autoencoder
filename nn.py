@@ -46,10 +46,12 @@ class NeuralNetwork(object):
         self.W2 -= self.mu * gradW2
         self.W3 -= self.mu * gradW3
 
-    def setparams(self, mu=1e-4, lam=1e-6, MaxTrial=50, MaxEpoch=100, TestRatio=10):
+    def setparams(self, mu=1e-4, lam=1e-6, pho=0.05, beta=1e-5, MaxTrial=50, MaxEpoch=100, TestRatio=10):
         'set parameters'
         self.mu = mu
         self.lam = lam
+        self.pho = pho
+        self.beta = beta
         self.MaxTrial = MaxTrial
         self.MaxEpoch = MaxEpoch
         # percentage
@@ -93,7 +95,8 @@ class NeuralNetwork(object):
 
     def cost(self, inData, outData):
         'cost function used in this NN'
-        return 0.5 * np.sum(np.square(outData - self.propagation(inData))) + self.lam * 0.5 * (np.sum(np.square(self.W2[:, 1:])) + np.sum(np.square(self.W3[:, 1:])))
+        J =  0.5 * np.sum(np.square(outData - self.propagation(inData))) + self.lam * 0.5 * (np.sum(np.square(self.W2[:, 1:])) + np.sum(np.square(self.W3[:, 1:])))
+        return J
 
     def save(self, filename):
         'save network'
