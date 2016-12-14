@@ -82,20 +82,22 @@ class NeuralNetwork(object):
         self.initW()
 
         for i in range(self.MaxEpoch):
-            for j in range(self.MaxTrial):
-                pickupiter = np.random.randint(trainsize)
-                tdataI = traindataI[pickupiter]
-                tdataO = traindataO[pickupiter]
-                # self.checkgrad(tdataI, tdataO)
-                self.updateW(tdataI, tdataO)
+            # self.checkgrad(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose)
+            self.updateW(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
+            # for j in range(self.MaxTrial):
+            #     pickupiter = np.random.randint(trainsize)
+            #     tdataI = traindataI[pickupiter]
+            #     tdataO = traindataO[pickupiter]
+            #     self.updateW(tdataI, tdataO)
 
             # varidation / 2
             self.trainAccuracies.append(self.cost(traindataI[:, :, 0].transpose(), traindataO[:, :, 0].transpose()) / (trainsize-1))
-            self.testAccuracies.append(self.cost(testdataI, testdataO) / (testsize-1))
+            # self.testAccuracies.append(self.cost(testdataI, testdataO) / (testsize-1))
 
     def cost(self, inData, outData):
         'cost function used in this NN'
-        J =  0.5 * np.sum(np.square(outData - self.propagation(inData))) + self.lam * 0.5 * (np.sum(np.square(self.W2[:, 1:])) + np.sum(np.square(self.W3[:, 1:])))
+        m = inData.shape[1]
+        J =  0.5 / m * np.sum(np.square(outData - self.propagation(inData))) + self.lam * 0.5 * (np.sum(np.square(self.W2[:, 1:])) + np.sum(np.square(self.W3[:, 1:])))
         return J
 
     def save(self, filename):
@@ -112,14 +114,14 @@ class NeuralNetwork(object):
         'plot train accuracies and test accuracies'
 
         print(self.trainAccuracies[-1])
-        print(self.testAccuracies[-1])
+        # print(self.testAccuracies[-1])
 
         if type == 'global':
             plt.plot(range(self.MaxEpoch), self.trainAccuracies, label='train')
-            plt.plot(range(self.MaxEpoch), self.testAccuracies, label='test')
+            # plt.plot(range(self.MaxEpoch), self.testAccuracies, label='test')
         else:
             plt.plot(range(10, self.MaxEpoch), self.trainAccuracies[10:], label='train')
-            plt.plot(range(10, self.MaxEpoch), self.testAccuracies[10:], label='test')
+            # plt.plot(range(10, self.MaxEpoch), self.testAccuracies[10:], label='test')
 
         plt.legend(loc='upper right')
         plt.xlabel('Epoch')
@@ -129,6 +131,7 @@ class NeuralNetwork(object):
 
     def propagation(self, inputdata, type=None):
         'propagation in network'
+
         inputdata = np.concatenate((np.ones((1, inputdata.shape[1])), inputdata), axis=0)
 
         u2 = self.W2.dot(inputdata)
@@ -152,8 +155,10 @@ class NeuralNetwork(object):
         x1, x2, x3 = xs
         u2, u3 = us
 
+        m = x1.shape[1]
+
         gradEx3 = x3 - outputdatum
-        gradW3 = (gradEx3 * activation_difffunc(u3, "id")).dot(x2.transpose())
+        gradW3 = 1/m * (gradEx3 * activation_difffunc(u3, "id")).dot(x2.transpose())
 
         # regularization
         regW3 = np.hstack((np.zeros((gradW3.shape[0], 1)), self.W3[:, 1:]))
@@ -163,7 +168,7 @@ class NeuralNetwork(object):
         # gradEx2 = gradEx2.reshape(gradEx2.size, 1)
         gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3, "id"))
         # bias項のぶんだけ除く
-        gradW2 = (gradEx2[1:] * activation_difffunc(u2)).dot(x1.transpose())
+        gradW2 = 1/m * (gradEx2[1:] * activation_difffunc(u2)).dot(x1.transpose())
 
         #regularization
         regW2 = np.hstack((np.zeros((gradW2.shape[0], 1)), self.W2[:, 1:]))

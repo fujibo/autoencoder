@@ -54,7 +54,7 @@ if __name__ == '__main__':
     operators = ('+', '-')
     inputdata, outputdata = makeData(operators=operators)
 
-    NN.setparams(mu=1e-3, MaxEpoch=1000)
+    NN.setparams(mu=1e-3, MaxEpoch=1000, TestRatio=0)
     NN.train(inputdata=inputdata, outputdata=outputdata)
     # NN.save('weight.npz')
     NN.plot(type='global')
