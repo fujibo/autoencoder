@@ -167,7 +167,9 @@ class NeuralNetwork(object):
         m = x1.shape[1]
 
         gradEx3 = x3 - outputdatum
-        gradW3 = 1/m * (gradEx3 * activation_difffunc(u3)).dot(x2.transpose())
+        # 1/m?
+        delta3 = gradEx3 * activation_difffunc(u3)
+        gradW3 = 1/m * delta3.dot(x2.transpose())
 
         # regularization
         regW3 = np.hstack((np.zeros((gradW3.shape[0], 1)), self.W3[:, 1:]))
@@ -175,12 +177,14 @@ class NeuralNetwork(object):
 
         # gradEx2 = (gradEx3 * activation_difffunc(u3)).transpose().dot(self.W3)
         # gradEx2 = gradEx2.reshape(gradEx2.size, 1)
-        gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3))
+        gradEx2 = self.W3.transpose().dot(delta3)
         # bias項のぶんだけ除く add term for sparse
         sparseTerm = self.beta * (-self.rho/self.activeNum + (1 - self.rho)/(1 - self.activeNum))
         sparseTerm = sparseTerm.reshape(sparseTerm.size, 1)
 
-        gradW2 = 1/m * (gradEx2[1:] * activation_difffunc(u2) + sparseTerm).dot(x1.transpose())
+        delta2 = gradEx2[1:] * activation_difffunc(u2)
+
+        gradW2 = 1/m * (delta2 + sparseTerm).dot(x1.transpose())
 
         #regularization
         regW2 = np.hstack((np.zeros((gradW2.shape[0], 1)), self.W2[:, 1:]))

@@ -55,11 +55,11 @@ if __name__ == '__main__':
     # print(loaddata().shape)
     operators = ('+', '-')
     inputdata, outputdata = makeData(operators=operators)
-    
+
     # data = loaddata()
     # print(data.shape)
 
-    NN.setparams(mu=1e-3, MaxEpoch=100, TestRatio=0, lam=0, beta=1e-3)
+    NN.setparams(mu=1e-3, MaxEpoch=100, TestRatio=0, lam=0, beta=1e-6)
     NN.train(inputdata=inputdata, outputdata=outputdata)
     # NN.train(inputdata=data, outputdata=data)
     # NN.save('weight.npz')
