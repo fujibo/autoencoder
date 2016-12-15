@@ -85,7 +85,7 @@ class NeuralNetwork(object):
         self.initW()
 
         for i in range(self.MaxEpoch):
-            # self.checkgrad(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
+            self.checkgrad(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
             self.updateW(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
             # for j in range(self.MaxTrial):
             #     pickupiter = np.random.randint(trainsize)
@@ -145,7 +145,7 @@ class NeuralNetwork(object):
         x2 = np.concatenate((np.ones((1, x2.shape[1])), x2), axis=0)
 
         u3 = self.W3.dot(x2)
-        x3 = activation_func(u3, "sigmoid")
+        x3 = activation_func(u3)
         xs = (inputdata, x2, x3)
         us = (u2, u3)
         if type is None:
@@ -168,18 +168,21 @@ class NeuralNetwork(object):
         m = x1.shape[1]
 
         gradEx3 = x3 - outputdatum
-        gradW3 = 1/m * (gradEx3 * activation_difffunc(u3, "sigmoid")).dot(x2.transpose())
+        gradW3 = 1/m * (gradEx3 * activation_difffunc(u3)).dot(x2.transpose())
 
         # regularization
         regW3 = np.hstack((np.zeros((gradW3.shape[0], 1)), self.W3[:, 1:]))
         gradW3 += self.lam * regW3
 
-        # gradEx2 = (gradEx3 * activation_difffunc(u3, "sigmoid")).transpose().dot(self.W3)
+        # gradEx2 = (gradEx3 * activation_difffunc(u3)).transpose().dot(self.W3)
         # gradEx2 = gradEx2.reshape(gradEx2.size, 1)
-        gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3, "sigmoid"))
+        gradEx2 = self.W3.transpose().dot(gradEx3 * activation_difffunc(u3))
         # bias項のぶんだけ除く add term for sparse
-        sparseTerm = self.beta * (-self.rho/self.activeNum) + (1 - self.rho)/(1 - self.activeNum)
+        sparseTerm = self.beta * (-self.rho/self.activeNum + (1 - self.rho)/(1 - self.activeNum))
         sparseTerm = sparseTerm.reshape(sparseTerm.size, 1)
+        print(sparseTerm)
+        input()
+
         gradW2 = 1/m * (gradEx2[1:] * activation_difffunc(u2) + sparseTerm).dot(x1.transpose())
 
         #regularization

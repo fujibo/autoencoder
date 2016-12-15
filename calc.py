@@ -25,6 +25,7 @@ def makeData(operators):
     else:
         inputdata = np.array(inputdata)
         outputdata = np.array(outputdata)
+        outputdata = (outputdata + 10) / 30
         print(inputdata.shape)
         print(outputdata.shape)
 
@@ -48,18 +49,22 @@ def loaddata():
         return np.array(data)
 
 if __name__ == '__main__':
-    NN = nn.NeuralNetwork(layer_num=(64, 25, 64))
+    # NN = nn.NeuralNetwork(layer_num=(64, 25, 64))
+    NN = nn.NeuralNetwork(layer_num=(2, 10, 2))
 
     # print(loaddata().shape)
-    # operators = ('+', '-')
-    # inputdata, outputdata = makeData(operators=operators)
+    operators = ('+', '-')
+    inputdata, outputdata = makeData(operators=operators)
+    print(inputdata)
+    print(outputdata)
+    input()
 
-    data = loaddata()
-    print(data.shape)
+    # data = loaddata()
+    # print(data.shape)
 
-    NN.setparams(mu=1e-3, MaxEpoch=100, TestRatio=0)
-    # NN.train(inputdata=inputdata, outputdata=outputdata)
-    NN.train(inputdata=data, outputdata=data)
+    NN.setparams(mu=1e-3, MaxEpoch=100, TestRatio=0, lam=0, beta=0)
+    NN.train(inputdata=inputdata, outputdata=outputdata)
+    # NN.train(inputdata=data, outputdata=data)
     # NN.save('weight.npz')
     NN.plot(type='global')
 
