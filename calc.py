@@ -45,22 +45,26 @@ def loaddata():
         data.append(matdata[point[0]:point[0]+8, point[1]:point[1]+8, img].flatten())
     else:
         print("make data")
-        return np.array(data).transpose()
+        return np.array(data)
 
 if __name__ == '__main__':
-    NN = nn.NeuralNetwork(layer_num=(2, 10, 2))
+    NN = nn.NeuralNetwork(layer_num=(64, 25, 64))
 
-    print(loaddata().shape)
-    operators = ('+', '-')
-    inputdata, outputdata = makeData(operators=operators)
+    # print(loaddata().shape)
+    # operators = ('+', '-')
+    # inputdata, outputdata = makeData(operators=operators)
 
-    NN.setparams(mu=1e-3, MaxEpoch=1000, TestRatio=0)
-    NN.train(inputdata=inputdata, outputdata=outputdata)
+    data = loaddata()
+    print(data.shape)
+
+    NN.setparams(mu=1e-3, MaxEpoch=100, TestRatio=0)
+    # NN.train(inputdata=inputdata, outputdata=outputdata)
+    NN.train(inputdata=data, outputdata=data)
     # NN.save('weight.npz')
     NN.plot(type='global')
 
     # NN.load("weight.npz")
 
-    ans = np.concatenate((inputdata.transpose(), NN.propagation(inputdata.transpose())), axis=0)
-    ans = ans.transpose()
-    print(ans)
+    # ans = np.concatenate((inputdata.transpose(), NN.propagation(inputdata.transpose())), axis=0)
+    # ans = ans.transpose()
+    # print(ans)
