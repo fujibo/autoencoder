@@ -102,7 +102,7 @@ class NeuralNetwork(object):
         m = inData.shape[1]
         J =  0.5 / m * np.sum(np.square(outData - self.propagation(inData))) + self.lam * 0.5 * (np.sum(np.square(self.W2[:, 1:])) + np.sum(np.square(self.W3[:, 1:])))
 
-        J += np.sum(np.log(self.rho/self.activeNum) + (1 - self.rho) * np.log((1-self.rho)/(1-self.activeNum)))
+        J += self.beta * np.sum(self.rho * np.log(self.rho/self.activeNum) + (1 - self.rho) * np.log((1-self.rho)/(1-self.activeNum)))
         return J
 
     def save(self, filename):
@@ -139,10 +139,14 @@ class NeuralNetwork(object):
 
         inputdata = np.concatenate((np.ones((1, inputdata.shape[1])), inputdata), axis=0)
 
+
         u2 = self.W2.dot(inputdata)
 
         x2 = activation_func(u2)
         x2 = np.concatenate((np.ones((1, x2.shape[1])), x2), axis=0)
+
+        # rho^
+        self.activeNum = np.mean(x2[1:,:], axis=1)
 
         u3 = self.W3.dot(x2)
         x3 = activation_func(u3)
@@ -160,10 +164,6 @@ class NeuralNetwork(object):
         x1, x2, x3 = xs
         u2, u3 = us
 
-        # rho^
-        self.activeNum = np.mean(x2[1:,:], axis=1)
-        print(self.activeNum)
-        # input()
 
         m = x1.shape[1]
 
@@ -180,10 +180,8 @@ class NeuralNetwork(object):
         # bias項のぶんだけ除く add term for sparse
         sparseTerm = self.beta * (-self.rho/self.activeNum + (1 - self.rho)/(1 - self.activeNum))
         sparseTerm = sparseTerm.reshape(sparseTerm.size, 1)
-        print(sparseTerm)
-        input()
 
-        gradW2 = 1/m * (gradEx2[1:] * activation_difffunc(u2) + sparseTerm).dot(x1.transpose())
+        gradW2 = 1/m * ((gradEx2[1:] + sparseTerm) * activation_difffunc(u2)).dot(x1.transpose())
 
         #regularization
         regW2 = np.hstack((np.zeros((gradW2.shape[0], 1)), self.W2[:, 1:]))
@@ -204,7 +202,6 @@ class NeuralNetwork(object):
 
         for i in range(self.W2.shape[0]):
             for j in range(self.W2.shape[1]):
-                # print(i, j)
                 self.W2[i][j] += delta
                 upper = self.cost(inputdatum, outputdatum)
                 self.W2 = originW2.copy()
@@ -212,8 +209,6 @@ class NeuralNetwork(object):
                 lower = self.cost(inputdatum, outputdatum)
                 ngradW2[i][j] = (upper - lower) / (2 * delta)
                 self.W2 = originW2.copy()
-
-        print("w2 end")
 
         for i in range(self.W3.shape[0]):
             for j in range(self.W3.shape[1]):

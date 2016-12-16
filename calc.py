@@ -55,9 +55,6 @@ if __name__ == '__main__':
     # print(loaddata().shape)
     operators = ('+', '-')
     inputdata, outputdata = makeData(operators=operators)
-    print(inputdata)
-    print(outputdata)
-    input()
 
     # data = loaddata()
     # print(data.shape)
