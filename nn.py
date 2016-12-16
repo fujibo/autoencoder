@@ -1,6 +1,7 @@
 'This module is for 3 layers newral network.'
 import numpy as np
 import matplotlib.pyplot as plt
+from PIL import Image
 
 def activation_func(z, type="sigmoid"):
     '''activation function used in neural network
@@ -85,7 +86,7 @@ class NeuralNetwork(object):
         self.initW()
 
         for i in range(self.MaxEpoch):
-            self.checkgrad(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
+            # self.checkgrad(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
             self.updateW(traindataI[:,:,0].transpose(), traindataO[:,:,0].transpose())
             # for j in range(self.MaxTrial):
             #     pickupiter = np.random.randint(trainsize)
@@ -95,6 +96,8 @@ class NeuralNetwork(object):
 
             # varidation / 2
             self.trainAccuracies.append(self.cost(traindataI[:, :, 0].transpose(), traindataO[:, :, 0].transpose()) / (trainsize-1))
+
+            print(self.activeNum)
             # self.testAccuracies.append(self.cost(testdataI, testdataO) / (testsize-1))
 
     def cost(self, inData, outData):
@@ -132,7 +135,29 @@ class NeuralNetwork(object):
         plt.xlabel('Epoch')
         plt.ylabel('Error')
         plt.savefig('figure.eps')
-        plt.show()
+        # plt.show()
+
+    def visualize(self):
+        'visualize hidden unit feature'
+
+        reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
+        reg = reg.reshape(reg.size, 1)
+        visData = 1 / reg * self.W2[:, 1:]
+
+        k = 0
+        for element in visData:
+            length = int(np.sqrt(element.shape[0]))
+            element = element.reshape(length, length)
+            element = element * 255
+            element = element.astype('uint8')
+            img = Image.new("L", (length, length))
+            for i in range(length):
+                for j in range(length):
+                    img.putpixel((i, j), element[i, j])
+            else:
+                img.save("bmp/vis{:02d}.bmp".format(k))
+                k += 1
+
 
     def propagation(self, inputdata, type=None):
         'propagation in network'
