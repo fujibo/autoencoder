@@ -79,13 +79,12 @@ class NeuralNetwork(object):
 
         w0 = np.concatenate((self.W2.flatten(), self.W3.flatten())).copy()
         print(w0.shape)
-        minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':10, 'disp': True})
+        minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':400, 'disp': True})
 
         # for i in range(self.MaxEpoch):
 
     def cost(self, args):
         'cost function used in this NN'
-        print('cost')
         w2 = args[0:self.W2.size]
         w3 = args[self.W2.size:]
         w2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
@@ -100,9 +99,9 @@ class NeuralNetwork(object):
     def visualize(self):
         'visualize hidden unit feature'
         spi.savemat("w2.mat", {"w2": self.W2[:, 1:]})
-        reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
-        reg = reg.reshape(reg.size, 1)
-        visData = 1 / reg * self.W2[:, 1:]
+        # reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
+        # reg = reg.reshape(reg.size, 1)
+        # visData = 1 / reg * self.W2[:, 1:]
 
         # spi.savemat("visdata.mat", {"visdata": visData})
         # k = 0
