@@ -2,7 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as spi
-
+import numba
+# import scipy.optimize as sp_opt
 from PIL import Image
 
 def activation_func(z, type="sigmoid"):
@@ -45,7 +46,7 @@ class NeuralNetwork(object):
 
         const = (self.HIDDEN_LAYER-1) + self.OUTPUT_LAYER + 1
         self.W3 = np.concatenate((np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER-1)  * 2 * np.sqrt(6/const) - np.sqrt(6/const), np.zeros((self.OUTPUT_LAYER, 1))), axis=1)
-
+    @numba.jit
     def updateW(self, inputdatum, outputdatum):
         'update weight'
         gradW2, gradW3 = self.backpropagation(inputdatum, outputdatum)
@@ -102,10 +103,11 @@ class NeuralNetwork(object):
 
             # varidation / 2
             self.trainAccuracies.append(self.cost(traindataI[:, :, 0].transpose(), traindataO[:, :, 0].transpose()) / (trainsize-1))
-
+            print(i)
+            print(self.trainAccuracies[-1])
             print(self.activeNum)
             # self.testAccuracies.append(self.cost(testdataI, testdataO) / (testsize-1))
-
+    @numba.jit
     def cost(self, inData, outData):
         'cost function used in this NN'
         m = inData.shape[1]
@@ -165,7 +167,7 @@ class NeuralNetwork(object):
                 img.save("bmp/vis{:02d}.bmp".format(k))
                 k += 1
 
-
+    @numba.jit
     def propagation(self, inputdata, type=None):
         'propagation in network'
 
@@ -188,7 +190,7 @@ class NeuralNetwork(object):
             return x3
         else:
             return (xs, us)
-
+    @numba.jit
     def backpropagation(self, inputdatum, outputdatum):
         'propagation in network and return gradient'
         xs, us = self.propagation(inputdatum, 'forBP')
