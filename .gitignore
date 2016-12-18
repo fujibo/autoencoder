@@ -1,3 +1,5 @@
 docs/
 __pycache__/
 DATA/
+starter/
+display_network.m

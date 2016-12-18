@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     data = loaddata()
 
-    NN.setparams(mu=1e-3, MaxEpoch=1000, TestRatio=0, lam=1e-3, beta=3e-1)
+    NN.setparams(mu=1e-3, MaxEpoch=4, TestRatio=0, lam=1e-4, beta=3, rho=0.01)
     # NN.train(inputdata=inputdata, outputdata=outputdata)
     NN.train(inputdata=data, outputdata=data)
     # NN.save('weight.npz')

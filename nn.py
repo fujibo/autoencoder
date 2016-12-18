@@ -1,6 +1,8 @@
 'This module is for 3 layers newral network.'
 import numpy as np
 import matplotlib.pyplot as plt
+import scipy.io as spi
+
 from PIL import Image
 
 def activation_func(z, type="sigmoid"):
@@ -37,8 +39,12 @@ class NeuralNetwork(object):
 
     def initW(self):
         'initialize weight'
-        self.W2 = np.random.rand(self.HIDDEN_LAYER-1, self.INPUT_LAYER)
-        self.W3 = np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER)
+        const = (self.HIDDEN_LAYER-1) + (self.INPUT_LAYER-1) + 1
+        tempW2 = np.random.rand(self.HIDDEN_LAYER-1, self.INPUT_LAYER-1) * 2 * np.sqrt(6/const) - np.sqrt(6/const)
+        self.W2 = np.concatenate((tempW2, np.zeros((self.HIDDEN_LAYER-1, 1))), axis=1)
+
+        const = (self.HIDDEN_LAYER-1) + self.OUTPUT_LAYER + 1
+        self.W3 = np.concatenate((np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER-1)  * 2 * np.sqrt(6/const) - np.sqrt(6/const), np.zeros((self.OUTPUT_LAYER, 1))), axis=1)
 
     def updateW(self, inputdatum, outputdatum):
         'update weight'
@@ -139,11 +145,12 @@ class NeuralNetwork(object):
 
     def visualize(self):
         'visualize hidden unit feature'
-
+        spi.savemat("w2.mat", {"w2": self.W2[:, 1:]})
         reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
         reg = reg.reshape(reg.size, 1)
         visData = 1 / reg * self.W2[:, 1:]
 
+        spi.savemat("visdata.mat", {"visdata": visData})
         k = 0
         for element in visData:
             length = int(np.sqrt(element.shape[0]))
