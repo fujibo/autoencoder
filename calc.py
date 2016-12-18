@@ -1,4 +1,4 @@
-import nn
+import nn_lbfgs as nn
 import numpy as np
 import scipy.io as spi
 
