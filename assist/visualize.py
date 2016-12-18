@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 
 if __name__ == '__main__':
-    data = spi.loadmat("./DATA/IMAGES_RAW.mat")["IMAGESr"]
+    data = spi.loadmat("../DATA/IMAGES_RAW.mat")["IMAGESr"]
     print(data.shape)
     # 0 - 255であると推定
     scale = 255 / (np.max(data) - np.min(data))
