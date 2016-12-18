@@ -42,10 +42,10 @@ class NeuralNetwork(object):
         'initialize weight'
         const = (self.HIDDEN_LAYER-1) + (self.INPUT_LAYER-1) + 1
         tempW2 = np.random.rand(self.HIDDEN_LAYER-1, self.INPUT_LAYER-1) * 2 * np.sqrt(6/const) - np.sqrt(6/const)
-        self.W2 = np.concatenate((tempW2, np.zeros((self.HIDDEN_LAYER-1, 1))), axis=1)
+        self.W2 = np.concatenate((np.zeros((self.HIDDEN_LAYER-1, 1)), tempW2), axis=1)
 
         const = (self.HIDDEN_LAYER-1) + self.OUTPUT_LAYER + 1
-        self.W3 = np.concatenate((np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER-1)  * 2 * np.sqrt(6/const) - np.sqrt(6/const), np.zeros((self.OUTPUT_LAYER, 1))), axis=1)
+        self.W3 = np.concatenate((np.zeros((self.OUTPUT_LAYER, 1)), np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER-1) * 2 * np.sqrt(6/const) - np.sqrt(6/const)), axis=1)
     @numba.jit
     def updateW(self, inputdatum, outputdatum):
         'update weight'
