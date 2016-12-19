@@ -46,6 +46,9 @@ class NeuralNetwork(object):
         const = (self.HIDDEN_LAYER-1) + self.OUTPUT_LAYER + 1
         self.W3 = np.concatenate((np.zeros((self.OUTPUT_LAYER, 1)), np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER-1) * 2 * np.sqrt(6/const) - np.sqrt(6/const)), axis=1)
 
+        print(self.W2.shape)
+        print(self.W3.shape)
+
     def updateW(self, inputdatum, outputdatum):
         'update weight'
         gradW2, gradW3 = self.backpropagation(inputdatum, outputdatum)
@@ -81,9 +84,16 @@ class NeuralNetwork(object):
 
         # self.checkgrad(w0)
 
-        minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':self.MaxEpoch, 'disp': True})
+        result = minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':self.MaxEpoch, 'disp': True})
 
-        # for i in range(self.MaxEpoch):
+        print(result)
+        print(w0)
+        print(result.x.shape)
+        w2 = result.x[0:self.W2.size]
+        w3 = result.x[self.W2.size:]
+        self.W2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
+        self.W3 = w3.reshape(self.W3.shape[0], self.W3.shape[1])
+
 
     def cost(self, args):
         'cost function used in this NN'
@@ -101,9 +111,11 @@ class NeuralNetwork(object):
     def visualize(self):
         'visualize hidden unit feature'
         spi.savemat("w2.mat", {"w2": self.W2[:, 1:]})
-        # reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
-        # reg = reg.reshape(reg.size, 1)
-        # visData = 1 / reg * self.W2[:, 1:]
+
+        reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
+        reg = reg.reshape(reg.size, 1)
+        reg = np.sqrt(reg)
+        visData = 1 / reg * self.W2[:, 1:]
 
         # spi.savemat("visdata.mat", {"visdata": visData})
         # k = 0
