@@ -81,7 +81,7 @@ class NeuralNetwork(object):
 
         # self.checkgrad(w0)
 
-        minimize(self.cost, w0, jac=self.numericalGrad, method='L-BFGS-B', options={'maxiter':self.MaxEpoch, 'disp': True})
+        minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':self.MaxEpoch, 'disp': True})
 
         # for i in range(self.MaxEpoch):
 
