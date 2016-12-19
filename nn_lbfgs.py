@@ -2,7 +2,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.io as spi
-import numba
 from scipy.optimize import *
 from PIL import Image
 
@@ -79,7 +78,10 @@ class NeuralNetwork(object):
 
         w0 = np.concatenate((self.W2.flatten(), self.W3.flatten())).copy()
         print(w0.shape)
-        minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':400, 'disp': True})
+
+        # self.checkgrad(w0)
+
+        minimize(self.cost, w0, jac=self.numericalGrad, method='L-BFGS-B', options={'maxiter':self.MaxEpoch, 'disp': True})
 
         # for i in range(self.MaxEpoch):
 
@@ -174,55 +176,75 @@ class NeuralNetwork(object):
 
         return np.concatenate((gradW2.flatten(), gradW3.flatten()))
 
-    def numericalGrad(self, inputdatum, outputdatum):
+    def numericalGrad(self, args):
         '''get weights gradient by numerical way.
             this is only for checking, so please do not use.
         '''
-        ngradW2 = np.zeros(self.W2.shape)
-        ngradW3 = np.zeros(self.W3.shape)
+        w2 = args[0:self.W2.size]
+        w3 = args[self.W2.size:]
+        w2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
+        w3 = w3.reshape(self.W3.shape[0], self.W3.shape[1])
+
+        ngradW2 = np.zeros(w2.shape)
+        ngradW3 = np.zeros(w3.shape)
         delta = 1e-6
-        originW2 = self.W2.copy()
-        originW3 = self.W3.copy()
+        originW2 = w2.copy()
+        originW3 = w3.copy()
 
-        for i in range(self.W2.shape[0]):
-            for j in range(self.W2.shape[1]):
-                self.W2[i][j] += delta
-                upper = self.cost(inputdatum, outputdatum)
-                self.W2 = originW2.copy()
-                self.W2[i][j] -= delta
-                lower = self.cost(inputdatum, outputdatum)
+        for i in range(w2.shape[0]):
+            for j in range(w2.shape[1]):
+                w2[i][j] += delta
+                argsNew = np.concatenate((w2.flatten(), w3.flatten()))
+                upper = self.cost(argsNew)
+                w2 = originW2.copy()
+                w2[i][j] -= delta
+                argsNew = np.concatenate((w2.flatten(), w3.flatten()))
+                lower = self.cost(argsNew)
                 ngradW2[i][j] = (upper - lower) / (2 * delta)
-                self.W2 = originW2.copy()
+                w2 = originW2.copy()
 
-        for i in range(self.W3.shape[0]):
-            for j in range(self.W3.shape[1]):
-                self.W3[i][j] += delta
-                upper = self.cost(inputdatum, outputdatum)
-                self.W3 = originW3.copy()
-                self.W3[i][j] -= delta
-                lower = self.cost(inputdatum, outputdatum)
+        for i in range(w3.shape[0]):
+            for j in range(w3.shape[1]):
+                w3[i][j] += delta
+                argsNew = np.concatenate((w2.flatten(), w3.flatten()))
+                upper = self.cost(argsNew)
+                w3 = originW3.copy()
+                w3[i][j] -= delta
+                argsNew = np.concatenate((w2.flatten(), w3.flatten()))
+                lower = self.cost(argsNew)
                 ngradW3[i][j] = (upper - lower) / (2 * delta)
-                self.W3 = originW3.copy()
+                w3 = originW3.copy()
 
-        return (ngradW2, ngradW3)
+        return np.concatenate((ngradW2.flatten(), ngradW3.flatten()))
 
 
-    def checkgrad(self, inputdatum, outputdatum):
+    def checkgrad(self, args):
         'check gradient of weights'
-        bgradW2, bgradW3 = self.backpropagation(inputdatum, outputdatum)
+        bresult = self.backpropagation(args)
+        w2 = bresult[0:self.W2.size]
+        w3 = bresult[self.W2.size:]
+        bgradW2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
+        bgradW3 = w3.reshape(self.W3.shape[0], self.W3.shape[1])
         print("backp end")
-        ngradW2, ngradW3 = self.numericalGrad(inputdatum, outputdatum)
+
+        nresult = self.numericalGrad(args)
+        w2 = nresult[0:self.W2.size]
+        w3 = nresult[self.W2.size:]
+        ngradW2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
+        ngradW3 = w3.reshape(self.W3.shape[0], self.W3.shape[1])
         print("numerical end")
 
         print(bgradW2.shape)
         print(bgradW2)
         print(ngradW2.shape)
         print(ngradW2)
+        print(np.sum(np.square(bgradW2 - ngradW2)))
 
         print(bgradW3.shape)
         print(bgradW3)
         print(ngradW3.shape)
         print(ngradW3)
+        print(np.sum(np.square(bgradW3 - ngradW3)))
         input()
 
     def plot(self, type='global'):
