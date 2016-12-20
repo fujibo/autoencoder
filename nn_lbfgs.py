@@ -88,7 +88,9 @@ class NeuralNetwork(object):
 
         print(result)
         print(w0)
-        print(result.x.shape)
+        print(result.x)
+
+        print(self.activeNum)
         w2 = result.x[0:self.W2.size]
         w3 = result.x[self.W2.size:]
         self.W2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
@@ -117,20 +119,42 @@ class NeuralNetwork(object):
         reg = np.sqrt(reg)
         visData = 1 / reg * self.W2[:, 1:]
 
+        buf = 1
+        length = int(np.sqrt(visData.shape[1]))
+        dsize = int(np.sqrt(visData.shape[0]))
+        array = -np.ones((buf+dsize*(length+buf),buf+dsize*(length+buf)))
+
         # spi.savemat("visdata.mat", {"visdata": visData})
-        # k = 0
-        # for element in visData:
-        #     length = int(np.sqrt(element.shape[0]))
-        #     element = element.reshape(length, length)
-        #     element = element * 255
-        #     element = element.astype('uint8')
-        #     img = Image.new("L", (length, length))
-        #     for i in range(length):
-        #         for j in range(length):
-        #             img.putpixel((i, j), element[i, j])
-        #     else:
-        #         img.save("bmp/vis{:02d}.bmp".format(k))
-        #         k += 1
+        k = 0
+        clim = 0
+        for element in visData:
+            element = element.reshape(length, length)
+            img = Image.new("L", (length, length))
+            clim = np.max(np.abs(element))
+            m = k // 5
+            n = k % 5
+            element = element/clim
+            for i in range(length):
+                for j in range(length):
+                    tmp = element - np.min(element)
+                    tmp = tmp / np.max(tmp) * 255
+                    img.putpixel((i, j), tmp[i, j])
+            else:
+                array[buf+m*(length+buf)+0:buf+m*(length+buf)+length, buf+n*(length+buf)+0:buf+n*(length+buf) + length] = element
+
+                img.save("bmp/vis{:02d}.bmp".format(k))
+                k += 1
+        else:
+            array = array - np.min(array)
+            array = array / np.max(array) * 255
+
+            arrImage = Image.new("L", array.shape)
+            for i in range(array.shape[0]):
+                for j in range(array.shape[1]):
+                    arrImage.putpixel((i, j), array[i, j])
+            else:
+                arrImage = arrImage.resize((400, 400))
+                arrImage.save("bmp/all.bmp")
 
     def propagation(self, w2, w3, type=None):
         'propagation in network'

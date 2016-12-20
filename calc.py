@@ -73,6 +73,7 @@ def loaddata():
         # Rescale from [-1,1] to [0.1,0.9]
         patches = (patches + 1) * 0.4 + 0.1;
         print("make data")
+        spi.savemat("patches.mat", {"patches": patches.transpose()})
         return patches
 
 if __name__ == '__main__':
@@ -88,7 +89,7 @@ if __name__ == '__main__':
     # print(np.max(data))
     # print(np.min(data))
 
-    NN.setparams(mu=3, MaxEpoch=400, TestRatio=0, lam=1e-4, beta=3, rho=0.01)
+    NN.setparams(mu=3, MaxEpoch=10000, TestRatio=0, lam=1e-4, beta=3, rho=0.01)
     # NN.train(inputdata=inputdata, outputdata=outputdata)
     NN.train(inputdata=data, outputdata=data)
     # NN.save('weight.npz')
