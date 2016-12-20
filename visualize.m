@@ -1,3 +1,3 @@
 load("w2.mat");
-display_network(w2', true, true, 12, false);
+display_network(w2', 12);
 print -djpeg weights.jpg
