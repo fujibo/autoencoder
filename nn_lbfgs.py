@@ -24,18 +24,15 @@ def activation_difffunc(z, type="sigmoid"):
 class NeuralNetwork(object):
     """this is a class for 3 layers NeuralNetwork"""
     def __init__(self, layer_num, filename=None):
-        if filename is None:
-            'initialize network'
-            self.INPUT_LAYER, self.HIDDEN_LAYER, self.OUTPUT_LAYER = layer_num
-            # bias
-            self.INPUT_LAYER += 1
-            self.HIDDEN_LAYER += 1
+        'initialize network'
+        self.INPUT_LAYER, self.HIDDEN_LAYER, self.OUTPUT_LAYER = layer_num
+        # bias
+        self.INPUT_LAYER += 1
+        self.HIDDEN_LAYER += 1
 
-            self.setparams()
-            self.trainAccuracies = []
-            self.testAccuracies = []
-        else:
-            f = open(filename, 'r')
+        self.setparams()
+        self.trainAccuracies = []
+        self.testAccuracies = []
 
     def initW(self):
         'initialize weight'
@@ -46,26 +43,32 @@ class NeuralNetwork(object):
         const = (self.HIDDEN_LAYER-1) + self.OUTPUT_LAYER + 1
         self.W3 = np.concatenate((np.zeros((self.OUTPUT_LAYER, 1)), np.random.rand(self.OUTPUT_LAYER, self.HIDDEN_LAYER-1) * 2 * np.sqrt(6/const) - np.sqrt(6/const)), axis=1)
 
-        print(self.W2.shape)
-        print(self.W3.shape)
+    def updateW(self, args):
+        'update weight by using gradient descent'
+        grad_args = self.backpropagation(args)
+        gradW2 = grad_args[0:self.W2.size]
+        gradW3 = grad_args[self.W2.size:]
+        gradW2 = gradW2.reshape(self.W2.shape[0], self.W2.shape[1])
+        gradW3 = gradW3.reshape(self.W3.shape[0], self.W3.shape[1])
 
-    def updateW(self, inputdatum, outputdatum):
-        'update weight'
-        gradW2, gradW3 = self.backpropagation(inputdatum, outputdatum)
-        # gradW2, gradW3 = self.numericalGrad(inputdatum, outputdatum)
+        # gradW2, gradW3 = self.numericalGrad(args)
         self.W2 -= self.mu * gradW2
         self.W3 -= self.mu * gradW3
 
-    def setparams(self, mu=1e-4, lam=1e-6, rho=0.05, beta=1e-6, MaxTrial=50, MaxEpoch=100, TestRatio=10):
-        'set parameters'
+    def setparams(self, mu=1e-4, lam=1e-6, rho=0.05, beta=1e-6, MaxEpoch=100):
+        '''set parameters
+        mu: 学習係数, ここでは使われない
+        lam: 正則化項の係数
+        rho: スパースの程度を表すパラメータ
+        beta: スパース項の係数
+        MaxEpoch: epochの回数
+
+        '''
         self.mu = mu
         self.lam = lam
         self.rho = rho
         self.beta = beta
-        self.MaxTrial = MaxTrial
         self.MaxEpoch = MaxEpoch
-        # percentage
-        self.TestRatio = TestRatio
 
     def train(self, inputdata, outputdata):
         'train network'
@@ -87,10 +90,8 @@ class NeuralNetwork(object):
         result = minimize(self.cost, w0, jac=self.backpropagation, method='L-BFGS-B', options={'maxiter':self.MaxEpoch, 'disp': True})
 
         print(result)
-        print(w0)
-        print(result.x)
-
         print(self.activeNum)
+
         w2 = result.x[0:self.W2.size]
         w3 = result.x[self.W2.size:]
         self.W2 = w2.reshape(self.W2.shape[0], self.W2.shape[1])
@@ -107,13 +108,17 @@ class NeuralNetwork(object):
         J =  0.5 / m * np.sum(np.square(self.outData - self.propagation(w2, w3))) + self.lam * 0.5 * (np.sum(np.square(w2[:, 1:])) + np.sum(np.square(w3[:, 1:])))
 
         J += self.beta * np.sum(self.rho * np.log(self.rho/self.activeNum) + (1 - self.rho) * np.log((1-self.rho)/(1-self.activeNum)))
+
+        # plot用
         self.trainAccuracies.append(J)
         return J
 
     def visualize(self):
         'visualize hidden unit feature'
+        # octaveで後で可視化
         spi.savemat("w2.mat", {"w2": self.W2[:, 1:]})
 
+        # 可視化簡易版
         reg = np.sum(np.square(self.W2[:, 1:]), axis=1)
         reg = reg.reshape(reg.size, 1)
         reg = np.sqrt(reg)
@@ -124,7 +129,6 @@ class NeuralNetwork(object):
         dsize = int(np.sqrt(visData.shape[0]))
         array = -np.ones((buf+dsize*(length+buf),buf+dsize*(length+buf)))
 
-        # spi.savemat("visdata.mat", {"visdata": visData})
         k = 0
         clim = 0
         for element in visData:
@@ -200,10 +204,10 @@ class NeuralNetwork(object):
         gradW3 += self.lam * regW3
 
         gradEx2 = w3.transpose().dot(gradEx3 * activation_difffunc(u3))
-        # bias項のぶんだけ除く add term for sparse
         sparseTerm = self.beta * (-self.rho/self.activeNum + (1 - self.rho)/(1 - self.activeNum))
         sparseTerm = sparseTerm.reshape(sparseTerm.size, 1)
 
+        # bias項のぶんだけ除く, add term for sparse
         gradW2 = 1/m * ((gradEx2[1:] + sparseTerm) * activation_difffunc(u2)).dot(x1.transpose())
 
         #regularization
@@ -290,14 +294,12 @@ class NeuralNetwork(object):
         # print(self.testAccuracies[-1])
 
         if type == 'global':
-            plt.plot(range(len(self.trainAccuracies)), self.trainAccuracies, label='train')
-            # plt.plot(range(self.MaxEpoch), self.testAccuracies, label='test')
+            plt.plot(range(len(self.trainAccuracies)), self.trainAccuracies)
         else:
-            plt.plot(range(10, self.MaxEpoch), self.trainAccuracies[10:], label='train')
-            # plt.plot(range(10, self.MaxEpoch), self.testAccuracies[10:], label='test')
+            plt.plot(range(10, self.MaxEpoch), self.trainAccuracies[10:])
 
-        plt.legend(loc='upper right')
+        # plt.legend(loc='upper right')
         plt.xlabel('Epoch')
-        plt.ylabel('Error')
+        plt.ylabel('Cost')
         plt.savefig('figure.eps')
         # plt.show()
