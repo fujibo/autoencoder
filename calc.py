@@ -31,7 +31,6 @@ if __name__ == '__main__':
     NN = nn_lbfgs.NeuralNetwork(layer_num=(64, 25, 64))
 
     data = makeData()
-
     # NN.load("weight.npz")
 
     NN.setparams(mu=3, MaxEpoch=10000, lam=1e-4, beta=3, rho=0.01)
